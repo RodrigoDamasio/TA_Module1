@@ -2,7 +2,7 @@
 
 Review and refactoring plan for the deployed backend ([backend/](backend/)), building on [BACKEND_PLAN.md](BACKEND_PLAN.md).
 
-> **Status: implemented.** Findings F1–F13 closed; 83 tests, 99% coverage, Ruff (incl. `S` rules) clean. Deployment results in section 8.
+> **Status: implemented.** Findings F1–F13 closed; 83 tests, 99% coverage, Ruff (incl. `S` rules) clean. Redeployed to Railway (commit `7908e66`); post-deploy checks V1–V8 all passed, and links created before the refactor still redirect.
 
 **Goals**
 1. **SOLID**: each module has one reason to change, and business logic depends on abstractions, not on SQLite or FastAPI.
@@ -499,9 +499,9 @@ If any check V1–V8 fails:
 This is why the work should be **committed to git before starting** the refactor: it gives a known-good version to return to.
 
 **Definition of done**
-- [ ] All findings F1–F13 closed or explicitly accepted
-- [ ] All tests (old + new) green, coverage ≥ 90%, `ruff check` clean with `S` rules
-- [ ] Redeployed to Railway; post-deploy checks V1–V8 pass (section 8.3)
-- [ ] Short links created before the refactor still redirect (V2)
-- [ ] Every error response on production validates as RFC 9457 (V3–V6)
-- [ ] Frontend E2E suite green against production (V8)
+- [x] All findings F1–F13 closed or explicitly accepted
+- [x] All tests (old + new) green, coverage ≥ 90%, `ruff check` clean with `S` rules
+- [x] Redeployed to Railway; post-deploy checks V1–V8 pass (section 8.3)
+- [x] Short links created before the refactor still redirect (V2)
+- [x] Every error response on production validates as RFC 9457 (V3–V6)
+- [x] Frontend E2E suite green against production (V8)
