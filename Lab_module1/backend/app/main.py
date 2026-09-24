@@ -1,60 +1,31 @@
-import sqlite3
-from collections.abc import Iterator
+"""Composition root: builds the FastAPI app. Railway starts it with `uvicorn app.main:app`."""
 
-from fastapi import Depends, FastAPI, HTTPException, Response, status
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, HttpUrl
 
-from . import db, shortener
-from .config import get_settings
-
-app = FastAPI(title="URL Shortener")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=get_settings().frontend_origins,
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
-)
+from app.api import problems, routes
+from app.config import Settings, get_settings
 
 
-class ShortenRequest(BaseModel):
-    url: HttpUrl
+def create_app(settings: Settings | None = None) -> FastAPI:
+    settings = settings or get_settings()
+    app = FastAPI(title="URL Shortener")
+
+    # Order matters: Starlette makes the LAST added middleware the outermost.
+    # The error middleware is added first so CORS wraps it and 500s keep CORS headers.
+    app.add_middleware(problems.UnhandledErrorMiddleware)
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.frontend_origins,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type"],
+        expose_headers=["Retry-After"],
+    )
+
+    problems.register_problem_handlers(app)
+    app.include_router(problems.router)
+    app.include_router(routes.router)  # last: its /{short_code} route catches single segments
+    return app
 
 
-class ShortenResponse(BaseModel):
-    short_code: str
-    short_url: str
-
-
-def get_conn() -> Iterator[sqlite3.Connection]:
-    conn = db.connect(get_settings().database_path)
-    try:
-        yield conn
-    finally:
-        conn.close()
-
-
-@app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
-
-
-@app.post("/shorten", response_model=ShortenResponse, status_code=status.HTTP_201_CREATED)
-def shorten(
-    body: ShortenRequest,
-    response: Response,
-    conn: sqlite3.Connection = Depends(get_conn),
-) -> ShortenResponse:
-    code, created = shortener.get_or_create(conn, str(body.url))
-    if not created:
-        response.status_code = status.HTTP_200_OK
-    return ShortenResponse(short_code=code, short_url=f"{get_settings().base_url}/{code}")
-
-
-@app.get("/{short_code}")
-def redirect(short_code: str, conn: sqlite3.Connection = Depends(get_conn)) -> RedirectResponse:
-    url = shortener.resolve(conn, short_code) if shortener.is_valid_code(short_code) else None
-    if url is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Short URL not found")
-    return RedirectResponse(url, status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+app = create_app()

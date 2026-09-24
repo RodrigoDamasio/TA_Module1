@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app import db
+from app.infrastructure import database
 from app.main import app
 
 
@@ -20,6 +20,12 @@ def client(db_path):
 
 @pytest.fixture
 def conn(tmp_path):
-    connection = db.connect(str(tmp_path / "unit.db"))
+    connection = database.connect(str(tmp_path / "unit.db"))
     yield connection
     connection.close()
+
+
+@pytest.fixture(autouse=True)
+def _reset_dependency_overrides():
+    yield
+    app.dependency_overrides.clear()

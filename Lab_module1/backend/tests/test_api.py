@@ -60,15 +60,16 @@ def test_too_long_url_rejected(client):
 
 # A6
 @pytest.mark.parametrize(
-    "kwargs",
+    "kwargs, expected",
     [
-        {"json": {}},
-        {"json": {"url": 123}},
-        {"content": "not json", "headers": {"Content-Type": "application/json"}},
+        ({"json": {}}, 422),
+        ({"json": {"url": 123}}, 422),
+        # Not JSON at all is a syntax problem → 400 (RFC 9457 "malformed-request")
+        ({"content": "not json", "headers": {"Content-Type": "application/json"}}, 400),
     ],
 )
-def test_malformed_body_rejected(client, kwargs):
-    assert client.post("/shorten", **kwargs).status_code == 422
+def test_malformed_body_rejected(client, kwargs, expected):
+    assert client.post("/shorten", **kwargs).status_code == expected
 
 
 # A7

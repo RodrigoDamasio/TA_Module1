@@ -1,6 +1,7 @@
 import sqlite3
 from pathlib import Path
 
+# Constant DDL — the only statement run through executescript (never built from input).
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS urls (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,

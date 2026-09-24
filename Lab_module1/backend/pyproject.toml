@@ -7,7 +7,12 @@ line-length = 100
 target-version = "py312"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "B", "UP"]
+# S = flake8-bandit security rules; S608 flags SQL built from strings (SQL injection)
+select = ["E", "F", "I", "B", "UP", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+# pytest uses plain assert statements
+"tests/**" = ["S101", "S603"]  # plain asserts; subprocess used to run ruff in T-S4
 
 [tool.ruff.lint.flake8-bugbear]
 # FastAPI's Depends() in argument defaults is the intended pattern

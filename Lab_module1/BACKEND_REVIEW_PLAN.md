@@ -2,6 +2,8 @@
 
 Review and refactoring plan for the deployed backend ([backend/](backend/)), building on [BACKEND_PLAN.md](BACKEND_PLAN.md).
 
+> **Status: implemented.** Findings F1–F13 closed; 83 tests, 99% coverage, Ruff (incl. `S` rules) clean. Deployment results in section 8.
+
 **Goals**
 1. **SOLID**: each module has one reason to change, and business logic depends on abstractions, not on SQLite or FastAPI.
 2. **DDD (proportionate)**: the code speaks the domain language and keeps the domain free of frameworks. This is a small domain, so only the building blocks that pay off are used.

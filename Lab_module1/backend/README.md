@@ -1,6 +1,24 @@
 # URL Shortener — Backend
 
-FastAPI + SQLite. Design and test plan: [../BACKEND_PLAN.md](../BACKEND_PLAN.md).
+FastAPI + SQLite. Design and test plan: [../BACKEND_PLAN.md](../BACKEND_PLAN.md). Architecture, error handling and security review: [../BACKEND_REVIEW_PLAN.md](../BACKEND_REVIEW_PLAN.md).
+
+## Architecture
+
+Layered, DDD-style — dependencies point inward (`api → application → domain ← infrastructure`), enforced by `tests/test_architecture.py`.
+
+```
+app/
+├── domain/           # ShortCode, TargetUrl (value objects), ShortLink (aggregate), errors, ports
+├── application/      # ShortenUrl, ResolveShortLink (use cases)
+├── infrastructure/   # SQLite repository (the only SQL), random code generator, DB connection
+├── api/              # routes, schemas, RFC 9457 problems, dependency wiring
+├── config.py
+└── main.py           # composition root (create_app)
+```
+
+**Errors** follow [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457): every error is `application/problem+json` with `type`, `title`, `status`, `detail`, `instance` (and `errors[]` with JSON Pointers for validation). Problem types are documented at `GET /problems/{slug}`.
+
+**SQL injection:** all SQL is parameterized and lives in `app/infrastructure/`; Ruff's `S608` rule and `tests/test_sql_injection.py` guard against regressions.
 
 ## Run locally
 
